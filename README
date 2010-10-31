@@ -1,0 +1,2 @@
+Write views header content in php files. This helps to track the files in lets say a version control.
+By default, we need to write header content through views-ui and it is stored in database.
