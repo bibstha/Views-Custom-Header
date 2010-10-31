@@ -1,0 +1,4 @@
+name = Views Custom Header
+description = Attach header information through code
+package = Connectr
+core = 6.x

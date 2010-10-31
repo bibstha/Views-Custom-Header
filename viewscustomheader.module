@@ -1,0 +1,130 @@
+<?php
+/**
+ * ViewsCustomHeader allows header elements of any views to be placed inside a
+ * code. This makes sure things are taken proper care of using SCC
+ */
+
+/**
+ * Implementation of hook_views_api
+ *
+ * @return array
+ */
+function viewscustomheader_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'viewscustomheader'),
+    // no need to set path
+    //'path' => drupal_get_path('module', 'example') . '/includes/views',
+  );
+  
+}
+
+/**
+ * Implementation of hook_views_pre_render
+ */
+function viewscustomheader_views_pre_render(&$view) {
+
+  // uncomment below to display the name of the views
+  // drupal_set_message($view->name, 'View Name');
+  // drupal_set_message($view->current_display, 'Current Display');
+
+  // Note how views names are set
+  // If the view is an array with display keyword, the display is used
+  $views = array(
+    'og_blogs'   => array(),
+    'og_documents'   => array(),
+    'og_my'      => array(
+      'display'  => array('default'),
+    ),
+    'upcoming_events' => array(
+      'display'  => array('page_1'),
+    ),
+    'og_wiki' => array(
+    'display'  => array('page_1'),
+    ),
+
+    // a. Uncomment below to enable view only file
+//    'group_list' => array(),
+
+    // b. Uncomment below to enable view and display file
+    'group_list' => array(
+      'display'  => array('panel_pane_1'),
+    ),
+  );
+
+  /*
+   * Logic to theme a views header
+   *
+   * Check if view name is in the $views array
+   * if it is, and it does not contain display index
+   * theme it right away
+   *
+   * else, if display is found, and current_display is not in display
+   * ignore it
+   * if current_display is found
+   * theme it
+   */
+  $viewName = $view->name;
+  $displayName = $view->current_display;
+  if (array_key_exists($viewName, $views)) {
+
+    if (!isset($views[$viewName]['display'])) {
+      $output = theme('viewscustomheader', $view);
+    }
+    else {
+      if (!is_array($views[$viewName]['display'])) {
+        $views[$viewName]['display'] = array($views[$viewName]['display']);
+      }
+
+      if (in_array($displayName, $views[$viewName]['display'])) {
+        $output = theme('viewscustomheader', $view, true);
+      }
+      else {
+        return;
+      }
+    }
+  
+    $view->attachment_before = $output;
+  }
+}
+
+// Register our theme function in the theme registry
+// @todo make a pattern
+function viewscustomheader_theme() {
+  return array(
+    'viewscustomheader' => array(
+      'arguments' => array('view' => NULL, 'themeDisplay' => false),
+
+      // default template name, is overridden by
+      // modulename_preprocess_viewscustomheader
+      'template'  => '',
+      'path'      => drupal_get_path('module', 'viewscustomheader') . '/themes',
+    ),
+  );
+}
+
+/**
+ * Implementation of moduleName_preprocess_HOOK
+ *
+ * Reading Advanced Drupal Theming from ProDrupalDevelopment p194
+ * For more details on template functions
+ * @see http://drupal.org/node/223440
+ * @see http://api.drupal.org/api/function/hook_theme/6
+ * @see http://drupal.org/node/223430
+ *
+ * 
+ * @param <type> $variables
+ */
+function viewscustomheader_preprocess_viewscustomheader(&$vars) {
+  // Add a single suggestion.
+  $viewName = $vars['view']->name;
+  $displayName = $vars['view']->current_display;
+
+  if ($vars['themeDisplay']) {
+    $templateFilename = "viewscustomheader-$viewName-$displayName";
+  }
+  else {
+    $templateFilename = "viewscustomheader-$viewName";
+  }
+  $vars['template_files'][] = $templateFilename;
+}
